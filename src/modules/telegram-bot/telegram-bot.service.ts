@@ -23,12 +23,11 @@ export class TelegramBotService {
     this.logger.log('Initializing TG Bot');
     const mainMenu = {
       reply_markup: {
-        remove_keyboard: true,
         inline_keyboard: [
           [{ text: 'Help', callback_data: 'help' }],
           [{ text: 'Sync Task Data', callback_data: 'sync' }],
         ],
-        is_persistent: true,
+        is_persistent: false,
       },
     };
 
