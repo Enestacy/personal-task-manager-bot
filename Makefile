@@ -14,7 +14,6 @@ ifneq ("$(wildcard ./docker-compose.override.yml)","")
 	DOCKER_COMPOSE_FILES := $(DOCKER_COMPOSE_FILES) -f docker-compose.override.yml
 endif
 
-DOCKER_COMPOSE_FILES := -f docker-compose.yml
 DOCKER_COMPOSE := docker-compose $(DOCKER_COMPOSE_FILES) --project-name $(PROJECT_NAME)
 DOCKER_COMPOSE_RUN := $(DOCKER_COMPOSE) $(RUN)
 
