@@ -2,10 +2,11 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as TelegramBot from 'node-telegram-bot-api';
 import { TaskService } from '../task/task.service';
-
+import { forEachPromise } from 'src/common/helpers';
 @Injectable()
 export class TelegramBotService {
   private bot: TelegramBot;
+
   constructor(
     private readonly logger: Logger,
     private readonly configService: ConfigService,
@@ -19,8 +20,9 @@ export class TelegramBotService {
       },
     );
   }
+
   public initBot() {
-    this.logger.log('Initializing TG Bot');
+    this.logger.log('Initialized TG Bot');
     const mainMenu = {
       reply_markup: {
         inline_keyboard: [
@@ -61,7 +63,7 @@ export class TelegramBotService {
       );
     });
 
-    this.bot.onText(/\/menu/, (msg) => {
+    this.bot.onText(/\/start/, (msg) => {
       const chatId = msg.chat.id;
       this.bot.sendMessage(
         chatId,
@@ -70,12 +72,48 @@ export class TelegramBotService {
       );
     });
 
+    this.bot.onText(/\/report/, (msg) => {
+      const chatId = msg.chat.id;
+      this.bot
+        .sendMessage(
+          chatId,
+          `Отправьте мне номера тасок, которые включить в отчет, через запятую в ответ на это сообщение
+Рекомендую произвести синхронизацию данных перед генерацией отчета`,
+        )
+        .then(() => {
+          const listener = async (replyMsg: TelegramBot.Message) => {
+            this.bot.sendMessage(replyMsg.chat.id, `Подготавливаю отчет ... `);
+            const taskNumbers = replyMsg.text.split(',');
+            let taskReport = '';
+            await forEachPromise(
+              taskNumbers,
+              async (taskNumber: string, index) => {
+                const current = await this.taskService.getTaskByKey(taskNumber);
+                if (!current?.id) {
+                  taskReport += `${index + 1}. Таска номер ${taskNumber} не найдена \n\n`;
+                  return;
+                }
+                const taskInfo = this.taskService.buildTaskReport(current);
+                taskReport += `${index + 1}. ${taskInfo} \n\n`;
+              },
+            );
+            this.bot.sendMessage(
+              replyMsg.chat.id,
+              `**Отчет по таскам** \n ${taskReport}`,
+              { parse_mode: 'Markdown' },
+            );
+            this.bot.removeListener('message', listener);
+          };
+          this.bot.on('message', listener);
+        });
+    });
+
     this.bot.on('callback_query', async (callbackQuery) => {
       const message = callbackQuery.message;
       if (callbackQuery.data === 'help') {
         this.bot.sendMessage(
           message.chat.id,
-          '1. Для того, чтобы обновить комментарий к задаче, пришлите мне сообщение в формате <номер таски>: <комментарий>',
+          '1. Для того, чтобы обновить комментарий к задаче, пришлите мне сообщение в формате <номер таски>: <комментарий> \n 2. Для генерации отчета воспользуйтесь командой /report',
         );
         return;
       }
