@@ -23,8 +23,8 @@ export class TelegramBotService {
     this.logger.log('Initializing TG Bot');
     const mainMenu = {
       reply_markup: {
+        remove_keyboard: true,
         inline_keyboard: [
-          [{ text: 'Start', callback_data: 'start' }],
           [{ text: 'Help', callback_data: 'help' }],
           [{ text: 'Sync Task Data', callback_data: 'sync' }],
         ],
@@ -43,6 +43,25 @@ export class TelegramBotService {
       this.bot.sendMessage(msg.chat.id, reply, { parse_mode: 'Markdown' });
     });
 
+    this.bot.onText(/^(\d+):\s*(.*)$/, async (msg) => {
+      const regex = /^(\d+):\s*(.*)$/;
+      const match = msg.text.match(regex);
+      const taskNumber = match[1];
+      const comment = match[2];
+
+      const task = await this.taskService.getTaskByKey(taskNumber);
+      if (!task?.id) {
+        this.bot.sendMessage(msg.chat.id, `Таска с таким номером не найдена `);
+        return;
+      }
+
+      await this.taskService.update(task.id, { comments: comment });
+      this.bot.sendMessage(
+        msg.chat.id,
+        `Таска с номером ${taskNumber} успешно обновлена`,
+      );
+    });
+
     this.bot.onText(/\/menu/, (msg) => {
       const chatId = msg.chat.id;
       this.bot.sendMessage(
@@ -54,13 +73,11 @@ export class TelegramBotService {
 
     this.bot.on('callback_query', async (callbackQuery) => {
       const message = callbackQuery.message;
-      if (callbackQuery.data === 'start') {
-        this.bot.sendMessage(message.chat.id, 'Вы нажали Start!');
-        return;
-      }
-
       if (callbackQuery.data === 'help') {
-        this.bot.sendMessage(message.chat.id, 'Вы нажали Help!');
+        this.bot.sendMessage(
+          message.chat.id,
+          '1. Для того, чтобы обновить комментарий к задаче, пришлите мне сообщение в формате <номер таски>: <комментарий>',
+        );
         return;
       }
 
