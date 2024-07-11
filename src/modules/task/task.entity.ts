@@ -7,6 +7,12 @@ export class TaskEntity extends BaseEntity {
   @Column({ type: 'text', unique: true })
   public externalId: string;
 
+  @Column({ type: 'text' })
+  public title: string;
+
+  @Column({ type: 'text' })
+  public url: string;
+
   @Column({ type: 'text', default: 'not specified' })
   public state: string;
 

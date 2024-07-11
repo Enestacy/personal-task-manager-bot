@@ -32,13 +32,15 @@ export class TelegramBotService {
       },
     };
 
-    this.bot.on('message', (msg) => {
-      if (!msg.text.match(/\/(start|help|menu)/)) {
-        this.bot.sendMessage(
-          msg.chat.id,
-          'Пожалуйста, используйте меню команд.',
-        );
+    this.bot.onText(/^\d+$/, async (msg) => {
+      const task = await this.taskService.getTaskByKey(msg.text);
+      if (!task?.id) {
+        this.bot.sendMessage(msg.chat.id, `Таска с таким номером не найдена `);
+        return;
       }
+
+      const reply = this.taskService.buildTaskReport(task);
+      this.bot.sendMessage(msg.chat.id, reply, { parse_mode: 'Markdown' });
     });
 
     this.bot.onText(/\/menu/, (msg) => {

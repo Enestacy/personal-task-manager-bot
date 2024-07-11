@@ -4,6 +4,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  IsUrl,
   IsUUID,
 } from 'class-validator';
 
@@ -23,6 +24,14 @@ export class CreateTaskDto implements CreateTaskPayloadData {
   @IsDefined()
   @IsString()
   public state: string;
+
+  @IsDefined()
+  @IsString()
+  public title: string;
+
+  @IsDefined()
+  @IsUrl()
+  public url: string;
 
   @IsOptional()
   @IsString()

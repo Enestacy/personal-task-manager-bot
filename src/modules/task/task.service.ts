@@ -54,15 +54,31 @@ export class TaskService {
     return data;
   }
 
-  public async syncTaskData(): Promise<any> {
+  public async syncTaskData(): Promise<void> {
     const data = await this.jiraService.getTasks();
     const taskData: Partial<TaskEntity>[] = data.issues.map((el) => ({
       externalId: el.id,
       key: el.key,
       state: el.fields.status.name,
       number: +el.key.toString().replace('WA-', ''),
+      title: el.fields.summary,
+      url: `https://workaxle.atlassian.net/browse/${el.key}`,
     }));
     this.logger.log('TASK DATA -> ', taskData);
     await this.bulkUpsert(taskData);
+  }
+
+  public async getTaskByKey(key: string): Promise<TaskEntity | null> {
+    const taskRepository = this.datasource.getRepository(TaskEntity);
+
+    const task = await taskRepository.findOneBy({ number: +key });
+
+    return task;
+  }
+
+  public buildTaskReport(task: TaskEntity): string {
+    const report = `Таска [${task.title}](${task.url})\nСтатус - ${task.state} \nКомментарии - ${task.comments || 'Отсутствуют'}`;
+
+    return report;
   }
 }
