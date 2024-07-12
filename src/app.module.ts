@@ -16,6 +16,7 @@ import dbConfig from 'db/config/db-config';
       envFilePath: [
         `.env.${process.env.NODE_ENV}.local`,
         `.env.${process.env.NODE_ENV}`,
+        `.env`,
       ],
       isGlobal: true,
       cache: true,

@@ -8,6 +8,7 @@ ConfigModule.forRoot({
   envFilePath: [
     `.env.${process.env.NODE_ENV}.local`,
     `.env.${process.env.NODE_ENV}`,
+    `.env`,
   ],
   isGlobal: true,
   load: [dbConfig],
