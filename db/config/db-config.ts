@@ -10,14 +10,14 @@ export default registerAs(
   (): DataSourceOptions => ({
     type: 'postgres',
     url: process.env.DATABASE_URL,
-    username: 'postgres',
-    password: 'postgres',
+    username: process.env.PGUSER,
+    password: process.env.PGPASSWORD,
     entities: [join(__dirname, '../../**/*.entity.{ts,js}')],
     migrations: [join(__dirname, '../../db/migrations/*.{ts,js}')],
     namingStrategy: new NamingStrategy(),
     extra: {
       max: 10,
-      connectionTimeoutMillis: 1000,
+      connectionTimeoutMillis: 100000,
     },
     synchronize: false,
     logging: process.env.DATABASE_LOGGING_ENABLED === 'true',
