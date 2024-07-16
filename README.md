@@ -3,7 +3,21 @@
 - [Local Usage](#local-usage)
 
 ## About
-Personal telegram bot to manage task on project
+Personal telegram bot to manage tasks on a project.
+
+### Tech Stack
+
+- **NestJS**  
+  - A progressive Node.js framework for building efficient, reliable, and scalable server-side applications.
+
+- **TypeORM**  
+  - An ORM that can run in Node.js, providing an elegant and intuitive way to interact with databases using TypeScript and JavaScript.
+
+- **PostgreSQL**  
+  - An advanced open-source relational database system, known for its robustness, extensibility, and standards compliance.
+
+- **Docker**  
+  - A platform designed to create, deploy, and run applications inside containers, enabling easier application management and scaling.
 
 ## Local Usage
 
