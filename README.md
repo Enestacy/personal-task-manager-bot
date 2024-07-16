@@ -1,4 +1,4 @@
-## Contents
+# Contents
 - [About](#about)
 - [Local Usage](#local-usage)
 
@@ -7,64 +7,64 @@ Personal telegram bot to manage task on project
 
 ## Local Usage
 
-1. Requirements
+### 1. Requirements
 
 * [Docker & Docker compose](https://docs.docker.com/compose/install/)
 
-2. Installation
+### 2. Installation
 
-### Preparation
+#### Preparation
 
-#### configure environment variables
+First of all, configure environment variables
 
 ```bash
 cp .env.development .env.development.local
 ```
 Then set your environments (you can use any text editor)
 
-### Launch provisioning(install packages, run migrations, etc.)
+#### Launch provisioning(install packages, run migrations, etc.)
 
 ```bash
 make provision
 ```
 
-3. Usage
+### 3. Usage
 
-### Run app
+#### Run app
 
 ```bash
 make app
 ```
 
-### Migrations
+#### Migrations
 
-#### Create migration
+##### Create migration
 
 ```bash
 make migration-create name=create-users
 ```
 
-#### Apply migrations
+##### Apply migrations
 
 ```bash
 make migration-up
 ```
 
-#### Revert migration
+##### Revert migration
 
 ```bash
 make migration-down
 ```
 
-### Stop
+#### Stop
 
-#### Stop and keep data
+##### Stop and keep data
 
 ```bash
 make down
 ```
 
-#### Stop and clear data
+##### Stop and clear data
 
 ```bash
 make down-v
