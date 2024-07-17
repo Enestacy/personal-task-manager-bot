@@ -3,6 +3,11 @@ import { ConfigService } from '@nestjs/config';
 import * as TelegramBot from 'node-telegram-bot-api';
 import { TaskService } from '../task/task.service';
 import { forEachPromise } from 'src/common/helpers';
+import {
+  BotCommands,
+  GET_TASK_INFO_REGEX,
+  UPDATE_TASK_COMMENTS_REGEX,
+} from './constants';
 @Injectable()
 export class TelegramBotService {
   private bot: TelegramBot;
@@ -25,45 +30,20 @@ export class TelegramBotService {
     this.logger.log('Initialized TG Bot');
     const mainMenu = {
       reply_markup: {
-        inline_keyboard: [
-          [{ text: 'Help', callback_data: 'help' }],
-          [{ text: 'Sync Task Data', callback_data: 'sync' }],
-        ],
+        inline_keyboard: [[{ text: 'Help', callback_data: 'help' }]],
         is_persistent: false,
       },
     };
 
-    this.bot.onText(/^\d+$/, async (msg) => {
-      const task = await this.taskService.getTaskByKey(msg.text);
-      if (!task?.id) {
-        this.bot.sendMessage(msg.chat.id, `Таска с таким номером не найдена `);
-        return;
-      }
-
-      const reply = this.taskService.buildTaskReport(task);
-      this.bot.sendMessage(msg.chat.id, reply, { parse_mode: 'Markdown' });
+    this.bot.onText(GET_TASK_INFO_REGEX, async (msg) => {
+      await this.getTaskHandler(msg.text, msg.chat.id);
     });
 
-    this.bot.onText(/^(\d+):\s*(.*)$/, async (msg) => {
-      const regex = /^(\d+):\s*(.*)$/;
-      const match = msg.text.match(regex);
-      const taskNumber = match[1];
-      const comment = match[2];
-
-      const task = await this.taskService.getTaskByKey(taskNumber);
-      if (!task?.id) {
-        this.bot.sendMessage(msg.chat.id, `Таска с таким номером не найдена `);
-        return;
-      }
-
-      await this.taskService.update(task.id, { comments: comment });
-      this.bot.sendMessage(
-        msg.chat.id,
-        `Таска с номером ${taskNumber} успешно обновлена`,
-      );
+    this.bot.onText(UPDATE_TASK_COMMENTS_REGEX, async (msg) => {
+      await this.updateTaskHandler(msg.text, msg.chat.id);
     });
 
-    this.bot.onText(/\/start/, (msg) => {
+    this.bot.onText(BotCommands.START, (msg) => {
       const chatId = msg.chat.id;
       this.bot.sendMessage(
         chatId,
@@ -72,7 +52,7 @@ export class TelegramBotService {
       );
     });
 
-    this.bot.onText(/\/report/, (msg) => {
+    this.bot.onText(BotCommands.REPORT, (msg) => {
       const chatId = msg.chat.id;
       this.bot
         .sendMessage(
@@ -108,25 +88,57 @@ export class TelegramBotService {
         });
     });
 
+    this.bot.onText(BotCommands.SYNC, async (msg) => {
+      await this.syncTaskHandler(msg.chat.id);
+    });
+
     this.bot.on('callback_query', async (callbackQuery) => {
       const message = callbackQuery.message;
       if (callbackQuery.data === 'help') {
         this.bot.sendMessage(
           message.chat.id,
-          '1. Для того, чтобы обновить комментарий к задаче, пришлите мне сообщение в формате <номер таски>: <комментарий> \n 2. Для генерации отчета воспользуйтесь командой /report',
+          '1. Для того, чтобы обновить комментарий к задаче, пришлите мне сообщение в формате <номер таски>: <комментарий> \n2. Для генерации отчета воспользуйтесь командой /report',
         );
-        return;
-      }
-
-      if (callbackQuery.data === 'sync') {
-        this.bot.sendMessage(
-          message.chat.id,
-          'Синхронизирую данные. Сообщу, когда все будет готово',
-        );
-        await this.taskService.syncTaskData();
-        this.bot.sendMessage(message.chat.id, 'Готово');
         return;
       }
     });
+  }
+
+  private async getTaskHandler(messageText: string, chatId: number) {
+    const task = await this.taskService.getTaskByKey(messageText);
+    if (!task?.id) {
+      this.bot.sendMessage(chatId, `Таска с таким номером не найдена `);
+      return;
+    }
+
+    const reply = this.taskService.buildTaskReport(task);
+    this.bot.sendMessage(chatId, reply, { parse_mode: 'Markdown' });
+  }
+
+  private async updateTaskHandler(messageText: string, chatId: number) {
+    const match = messageText.match(UPDATE_TASK_COMMENTS_REGEX);
+    const taskNumber = match[1];
+    const comment = match[2];
+
+    const task = await this.taskService.getTaskByKey(taskNumber);
+    if (!task?.id) {
+      this.bot.sendMessage(chatId, `Таска с таким номером не найдена `);
+      return;
+    }
+
+    await this.taskService.update(task.id, { comments: comment });
+    this.bot.sendMessage(
+      chatId,
+      `Таска с номером ${taskNumber} успешно обновлена`,
+    );
+  }
+
+  private async syncTaskHandler(chatId: number) {
+    this.bot.sendMessage(
+      chatId,
+      'Синхронизирую данные. Сообщу, когда все будет готово',
+    );
+    await this.taskService.syncTaskData();
+    this.bot.sendMessage(chatId, 'Готово');
   }
 }
