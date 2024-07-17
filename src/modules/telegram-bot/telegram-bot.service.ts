@@ -65,7 +65,6 @@ export class TelegramBotService {
           const listener = async (replyMsg: TelegramBot.Message) => {
             this.bot.sendMessage(replyMsg.chat.id, `Подготавливаю отчет ... `);
             const taskNumbers = replyMsg.text.split(',');
-            this.logger.debug('taskNumbers', taskNumbers);
             let taskReport = '';
             await forEachPromise(
               taskNumbers,
