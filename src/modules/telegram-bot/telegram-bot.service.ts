@@ -5,6 +5,7 @@ import { TaskService } from '../task/task.service';
 import { forEachPromise } from 'src/common/helpers';
 import {
   BotCommands,
+  GENERATE_TASK_REPORT_REGEX,
   GET_TASK_INFO_REGEX,
   UPDATE_TASK_COMMENTS_REGEX,
 } from './constants';
@@ -64,13 +65,14 @@ export class TelegramBotService {
           const listener = async (replyMsg: TelegramBot.Message) => {
             this.bot.sendMessage(replyMsg.chat.id, `Подготавливаю отчет ... `);
             const taskNumbers = replyMsg.text.split(',');
+            this.logger.debug('taskNumbers', taskNumbers);
             let taskReport = '';
             await forEachPromise(
               taskNumbers,
               async (taskNumber: string, index) => {
                 const current = await this.taskService.getTaskByKey(taskNumber);
                 if (!current?.id) {
-                  taskReport += `${index + 1}. Таска номер ${taskNumber} не найдена \n\n`;
+                  taskReport += `${index + 1}.Таска номер ${taskNumber} не найдена \n\n`;
                   return;
                 }
                 const taskInfo = this.taskService.buildTaskReport(current);
@@ -79,12 +81,12 @@ export class TelegramBotService {
             );
             this.bot.sendMessage(
               replyMsg.chat.id,
-              `**Отчет по таскам** \n ${taskReport}`,
+              `Отчет по таскам \n\n ${taskReport}`,
               { parse_mode: 'Markdown' },
             );
-            this.bot.removeListener('message', listener);
+            this.bot.removeTextListener(GENERATE_TASK_REPORT_REGEX);
           };
-          this.bot.on('message', listener);
+          this.bot.onText(GENERATE_TASK_REPORT_REGEX, listener);
         });
     });
 
