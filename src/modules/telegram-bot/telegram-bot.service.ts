@@ -9,6 +9,8 @@ import {
   GET_TASK_INFO_REGEX,
   UPDATE_TASK_COMMENTS_REGEX,
 } from './constants';
+import { TaskEntity } from '../task/task.entity';
+import { TASK_PAGE_SIZE } from '../task/constants';
 @Injectable()
 export class TelegramBotService {
   private bot: TelegramBot;
@@ -69,7 +71,8 @@ export class TelegramBotService {
             await forEachPromise(
               taskNumbers,
               async (taskNumber: string, index) => {
-                const current = await this.taskService.getTaskByKey(taskNumber);
+                const current =
+                  await this.taskService.getTaskByKey(+taskNumber);
                 if (!current?.id) {
                   taskReport += `${index + 1}.Таска номер ${taskNumber} не найдена \n\n`;
                   return;
@@ -93,20 +96,51 @@ export class TelegramBotService {
       await this.syncTaskHandler(msg.chat.id);
     });
 
+    this.bot.onText(BotCommands.LIST, async (msg) => {
+      const chatId = msg.chat.id;
+      const options = await this.generateInlineKeyboard(1);
+      this.bot.sendMessage(chatId, 'Ваши задачи:', {
+        reply_markup: options,
+      });
+    });
+
     this.bot.on('callback_query', async (callbackQuery) => {
       const message = callbackQuery.message;
+      const chatId = message.chat.id;
       if (callbackQuery.data === 'help') {
         this.bot.sendMessage(
-          message.chat.id,
+          chatId,
           '1. Для того, чтобы обновить комментарий к задаче, пришлите мне сообщение в формате <номер таски>: <комментарий> \n2. Для генерации отчета воспользуйтесь командой /report',
         );
         return;
       }
+      if (callbackQuery.data.startsWith('page_')) {
+        const page = parseInt(callbackQuery.data.split('_')[1]);
+
+        const options = await this.generateInlineKeyboard(page);
+
+        this.bot.editMessageText('Ваши задачи:', {
+          chat_id: chatId,
+          message_id: message.message_id,
+          reply_markup: options,
+        });
+
+        return;
+      }
+      if (callbackQuery.data.startsWith('WA_')) {
+        const taskNumber = callbackQuery.data.split('_')[1];
+
+        await this.getTaskHandler(taskNumber, chatId);
+
+        return;
+      }
+
+      this.bot.answerCallbackQuery(callbackQuery.id, { show_alert: false });
     });
   }
 
   private async getTaskHandler(messageText: string, chatId: number) {
-    const task = await this.taskService.getTaskByKey(messageText);
+    const task = await this.taskService.getTaskByKey(+messageText);
     if (!task?.id) {
       this.bot.sendMessage(chatId, `Таска с таким номером не найдена `);
       return;
@@ -121,7 +155,7 @@ export class TelegramBotService {
     const taskNumber = match[1];
     const comment = match[2];
 
-    const task = await this.taskService.getTaskByKey(taskNumber);
+    const task = await this.taskService.getTaskByKey(+taskNumber);
     if (!task?.id) {
       this.bot.sendMessage(chatId, `Таска с таким номером не найдена `);
       return;
@@ -141,5 +175,41 @@ export class TelegramBotService {
     );
     await this.taskService.syncTaskData();
     this.bot.sendMessage(chatId, 'Готово');
+  }
+
+  private async generateInlineKeyboard(
+    page: number,
+  ): Promise<TelegramBot.InlineKeyboardMarkup> {
+    const { tasks, total } = await this.taskService.getTasks(page);
+    const keyboard: { text: string; callback_data: string }[][] = tasks.map(
+      (task: TaskEntity) => [
+        {
+          text: `WA-${task.number}: ${task.title}`,
+          callback_data: `WA_${task.number}`,
+        },
+      ],
+    );
+
+    const navigation = [];
+
+    if (page > 1)
+      navigation.push({
+        text: '⬅️',
+        callback_data: page > 1 ? `page_${page - 1}` : 'null',
+      });
+
+    const hasNext = page * TASK_PAGE_SIZE < total;
+    if (hasNext) {
+      navigation.push({
+        text: '➡️',
+        callback_data: tasks.length ? `page_${page + 1}` : 'null',
+      });
+    }
+
+    keyboard.push(navigation);
+
+    return {
+      inline_keyboard: keyboard,
+    };
   }
 }

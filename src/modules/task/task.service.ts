@@ -4,6 +4,7 @@ import { DataSource, InsertResult, UpdateResult } from 'typeorm';
 import { CreateTaskDto } from './dto';
 import { withTransaction } from 'src/common/helpers';
 import { JiraService } from '../jira/jira.service';
+import { TASK_PAGE_SIZE } from './constants';
 
 @Injectable()
 export class TaskService {
@@ -67,12 +68,29 @@ export class TaskService {
     await this.bulkUpsert(taskData);
   }
 
-  public async getTaskByKey(key: string): Promise<TaskEntity | null> {
+  public async getTaskByKey(key: number): Promise<TaskEntity | null> {
     const taskRepository = this.datasource.getRepository(TaskEntity);
 
-    const task = await taskRepository.findOneBy({ number: +key });
+    const task = await taskRepository.findOneBy({ number: key });
 
     return task;
+  }
+
+  public async getTasks(page: number) {
+    const taskRepository = this.datasource.getRepository(TaskEntity);
+
+    const [tasks, total] = await taskRepository.findAndCount({
+      skip: (page - 1) * TASK_PAGE_SIZE,
+      take: TASK_PAGE_SIZE,
+      order: {
+        number: 'DESC',
+      },
+    });
+
+    return {
+      tasks,
+      total,
+    };
   }
 
   public buildTaskReport(task: TaskEntity): string {
