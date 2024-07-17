@@ -64,7 +64,6 @@ export class TaskService {
       title: el.fields.summary,
       url: `https://workaxle.atlassian.net/browse/${el.key}`,
     }));
-    this.logger.log('TASK DATA -> ', taskData);
     await this.bulkUpsert(taskData);
   }
 
