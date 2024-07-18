@@ -57,6 +57,7 @@ export class TelegramBotService {
 
     this.bot.onText(BotCommands.REPORT, (msg) => {
       const chatId = msg.chat.id;
+      this.stopTaskListener();
       this.bot
         .sendMessage(
           chatId,
@@ -86,6 +87,7 @@ export class TelegramBotService {
               `Отчет по таскам \n\n ${taskReport}`,
               { parse_mode: 'Markdown' },
             );
+            this.startTaskListener();
             this.bot.removeTextListener(GENERATE_TASK_REPORT_REGEX);
           };
           this.bot.onText(GENERATE_TASK_REPORT_REGEX, listener);
@@ -211,5 +213,15 @@ export class TelegramBotService {
     return {
       inline_keyboard: keyboard,
     };
+  }
+
+  private startTaskListener() {
+    this.bot.onText(GET_TASK_INFO_REGEX, async (msg) => {
+      await this.getTaskHandler(msg.text, msg.chat.id);
+    });
+  }
+
+  private stopTaskListener() {
+    this.bot.removeTextListener(GET_TASK_INFO_REGEX);
   }
 }
