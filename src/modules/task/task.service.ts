@@ -5,6 +5,7 @@ import { CreateTaskDto } from './dto';
 import { withTransaction } from 'src/common/helpers';
 import { JiraService } from '../jira/jira.service';
 import { TASK_PAGE_SIZE } from './constants';
+import { taskTitleFormatter } from './helpers';
 
 @Injectable()
 export class TaskService {
@@ -50,8 +51,6 @@ export class TaskService {
       return data;
     });
 
-    this.logger.log('DATA ', data);
-
     return data;
   }
 
@@ -94,8 +93,7 @@ export class TaskService {
   }
 
   public buildTaskReport(task: TaskEntity): string {
-    const report = `Таска [${task.title}](${task.url})\nСтатус - ${task.state} \nКомментарии - ${task.comments || 'Отсутствуют'}`;
-
+    const report = `Таска [WA-${task.number}: ${taskTitleFormatter(task.title)}](${task.url})\nСтатус - ${task.state} \nКомментарии - ${task.comments || 'Отсутствуют'}`;
     return report;
   }
 }
