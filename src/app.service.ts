@@ -3,6 +3,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { ConfigService } from '@nestjs/config';
+import { TaskService } from './modules/task/task.service';
 
 @Injectable()
 export class AppService {
@@ -10,6 +11,7 @@ export class AppService {
     private readonly httpService: HttpService,
     private readonly configService: ConfigService,
     private readonly logger: Logger,
+    private readonly taskService: TaskService,
   ) {
     this.logger = new Logger(AppService.name);
   }
@@ -26,6 +28,16 @@ export class AppService {
       );
     } catch (error) {
       this.logger.error('[MAINTAIN SERVER JOB] Error during request:', error);
+    }
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_10AM)
+  async handleTaskUpdatesCron() {
+    try {
+      await this.taskService.syncTaskData();
+      this.logger.debug('[SYNC TASK JOB]: Sync successful:');
+    } catch (error) {
+      this.logger.error('[SYNC TASK JOB] Error during sync:', error);
     }
   }
 }
