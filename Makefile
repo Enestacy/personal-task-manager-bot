@@ -14,7 +14,7 @@ ifneq ("$(wildcard ./docker-compose.override.yml)","")
 	DOCKER_COMPOSE_FILES := $(DOCKER_COMPOSE_FILES) -f docker-compose.override.yml
 endif
 
-DOCKER_COMPOSE := docker-compose $(DOCKER_COMPOSE_FILES) --project-name $(PROJECT_NAME)
+DOCKER_COMPOSE := docker compose $(DOCKER_COMPOSE_FILES) --project-name $(PROJECT_NAME)
 DOCKER_COMPOSE_RUN := $(DOCKER_COMPOSE) $(RUN)
 
 provision: rebuild-docker install build migrate
@@ -59,5 +59,5 @@ migration-down:
 	${DOCKER_COMPOSE_RUN} -e "NODE_ENV=${NODE_ENV}" app npm run migration:down
 
 rebuild-docker:
-        ${DOCKER_COMPOSE} stop app
-        ${DOCKER_COMPOSE} rm -f app
+	${DOCKER_COMPOSE} stop app
+	${DOCKER_COMPOSE} rm -f app
