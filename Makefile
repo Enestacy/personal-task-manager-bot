@@ -59,5 +59,5 @@ migration-down:
 	${DOCKER_COMPOSE_RUN} -e "NODE_ENV=${NODE_ENV}" app npm run migration:down
 
 rebuild-docker:
-	${DOCKER_COMPOSE} down app --rmi 'local'
-	${DOCKER_COMPOSE} build --force-rm
+        ${DOCKER_COMPOSE} stop app
+        ${DOCKER_COMPOSE} rm -f app
