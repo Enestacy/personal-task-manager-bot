@@ -38,7 +38,7 @@ app:
 	${DOCKER_COMPOSE_RUN} -e "NODE_ENV=${NODE_ENV}" --service-ports app
 
 migrate:
-	${DOCKER_COMPOSE_RUN} -e "NODE_ENV=development" app npm run migration:up
+	${DOCKER_COMPOSE_RUN} -e "NODE_ENV=${NODE_ENV}" app npm run migration:up
 
 down:
 	${DOCKER_COMPOSE} down
