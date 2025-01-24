@@ -4,7 +4,7 @@ import { TelegramBotService } from './modules/telegram-bot';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  await app.listen(process.env.APP_PORT);
+  await app.listen(process.env.APP_PORT ?? 3000);
 
   const telegramService = app.get(TelegramBotService);
   telegramService.initBot();
