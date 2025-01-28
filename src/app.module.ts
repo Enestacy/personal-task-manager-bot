@@ -9,7 +9,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { DataSourceOptions } from 'typeorm';
 import { TaskModule } from './modules/task/task.module';
 import dbConfig from 'db/config/db-config';
-import appConfig from './config/app.config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { HttpModule } from '@nestjs/axios';
 import { AppService } from './app.service';
@@ -23,7 +22,7 @@ import { AppService } from './app.service';
       ],
       isGlobal: true,
       cache: true,
-      load: [telegramConfig, jiraConfig, dbConfig, appConfig],
+      load: [telegramConfig, jiraConfig, dbConfig],
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
