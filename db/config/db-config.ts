@@ -9,9 +9,11 @@ export default registerAs(
   'database',
   (): DataSourceOptions => ({
     type: 'postgres',
-    url: process.env.DATABASE_URL,
+    host: process.env.PGHOST,
     username: process.env.PGUSER,
     password: process.env.PGPASSWORD,
+    database: process.env.PGDBNAME,
+    port: Number(process.env.DB_PORT ?? 5432),
     entities: [join(__dirname, '../../**/*.entity.{ts,js}')],
     migrations: [join(__dirname, '../../db/migrations/*.{ts,js}')],
     namingStrategy: new NamingStrategy(),
