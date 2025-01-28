@@ -20,17 +20,18 @@ jobs:
 
     steps:
     - name: Deploy using ssh
-      uses: appleboy/ssh-action@v1.8.0
+      uses: D3rHase/ssh-command-action@latest
       env:
         PROJECT_PATH: ${{ secrets.PROJECT_PATH }}
-        BRANCH: ${{ secrets.DEVELOP_BRANCH }}
+        BRANCH: ${{ secrets.DEVELOPMENT_BRANCH }}
       with:
         host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
-        key: ${{ secrets.PRIVATE_SSH_KEY }}
-        port: 22
+        port: ${{ secrets.PORT }}
+        user: ${{ secrets.USER }}
+        private_key: ${{ secrets.PRIVATE_KEY }}
         
-        script: |
+        command: |
+          echo 'Hello world!'
           cd $PROJECT_PATH
           git pull origin $BRANCH
           git status
