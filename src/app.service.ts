@@ -17,14 +17,20 @@ export class AppService {
   }
 
   private readonly URL = this.configService.get<string>(`app.healthUrl`);
+  private readonly tmpServiceURL = 'https://larning-log-j4wm.onrender.com'
 
-  @Cron(CronExpression.EVERY_5_MINUTES)
+  @Cron("0 */3 * * * *") //every 3 minutes
   async handleCron() {
     try {
       const response = await firstValueFrom(this.httpService.get(this.URL));
+      const tmpReq = await firstValueFrom(this.httpService.get(this.tmpServiceURL))
       this.logger.debug(
         '[MAINTAIN SERVER JOB]: Request successful:',
         response.data,
+      );
+      this.logger.debug(
+        '[MAINTAIN TMP-SERVER]: Request successful:',
+        tmpReq?.data,
       );
     } catch (error) {
       this.logger.error('[MAINTAIN SERVER JOB] Error during request:', error);
